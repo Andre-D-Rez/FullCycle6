@@ -23,7 +23,7 @@ def teste():
     #sql_Query_Not_Injection = text("select * from user where id=:user_id")
     #result = conn.execute(sql_Query_Not_Injection, user_id = id)
     
-    sql_Query_Injection = text("select * from user where id={}".format(id))
+    sql_Query_Injection = "select * from user where id={}".format(id)
     result = conn.execute(sql_Query_Injection)
 
     # user = [row[1] for row in result]
