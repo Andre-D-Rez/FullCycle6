@@ -1,7 +1,8 @@
 import os
-from flask import Flask, Markup, render_template, request
+from flask import Flask, render_template, request
 from sqlalchemy.sql import text
 from sqlalchemy import create_engine
+from markupsafe import Markup 
 
 #db_connect = create_engine('mysql://root:my-password@db/my_database')
 db_connect = create_engine('sqlite:///mydb.db', echo=True)
@@ -23,16 +24,16 @@ def login():
     
     conn = db_connect.connect()
 
-    #sql_Query_Not_Injection = text("select * from user where id=:user_id")
-    #result = conn.execute(sql_Query_Not_Injection, user_id = id)
+    sql_Query_Not_Injection = text("select * from user where id=:user_id")
+    result = conn.execute(sql_Query_Not_Injection, parameters=dict(user_id = id))
     
     #sql_Query_Injection_False_Negative = text("select * from user where id={}".format(id))
     #result = conn.execute(sql_Query_Injection_False_Negative)
 
-    sql_Query_Injection = "select * from user where id={}".format(id)
-    result = conn.execute(sql_Query_Injection)
+    # deprecated in SQLAlchemy >=2.0
+    #sql_Query_Injection = "select * from user where id={}".format(id)
+    #result = conn.execute(sql_Query_Injection)
 
-    # user = [row[1] for row in result]
     content = "<table>"
     content = content + str("<tr>")
     content = content + str("<th>id</th>")
@@ -49,10 +50,9 @@ def login():
         
 
     content = content + str("</table>")
-    # print(content)
     result = Markup(content)
 
     return render_template('index.html', result=result)
     
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
