@@ -8,11 +8,6 @@
 image: 
   python:latest  # this sets default image for jobs
 
-semgrep-sast:
-  stage: test
-  script:
-    - echo "Executando SAST com Semgrep..."
-
 check-sast-report:
   stage: test
   script:
