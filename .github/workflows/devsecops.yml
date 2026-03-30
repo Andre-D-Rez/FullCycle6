@@ -1,0 +1,63 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # Job equivalente ao 'semgrep-sast' do GitLab [cite: 93]
+  semgrep-sast:
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep Scan
+        run: semgrep scan --config auto --json --output report.json
+        
+      - name: Upload Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-report
+          path: report.json
+
+  # Job equivalente ao 'check-sast-report' do GitLab [cite: 95, 97]
+  check-sast-report:
+    needs: semgrep-sast
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Report Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sast-report
+
+      - name: Validate and Display Report
+        run: |
+          echo "Validando o relatório SAST..."
+          # Este comando simula a exibição do relatório vista no roteiro [cite: 102, 108]
+          # Se houver vulnerabilidades, ele as listará no console
+          python3 -c "
+          import json
+          try:
+              with open('report.json') as f:
+                  data = json.load(f)
+                  results = data.get('results', [])
+                  if not results:
+                      print('Nenhuma vulnerabilidade encontrada.')
+                  for issue in results:
+                      print(f'== Relatório de Vulnerabilidades ==')
+                      print(f'Nome: {issue[\"extra\"][\"message\"]}')
+                      print(f'Severidade: {issue[\"extra\"][\"severity\"]}')
+                      print(f'Arquivo: {issue[\"path\"]}')
+                      print(f'Linhas: {issue[\"start\"][\"line\"]}')
+                      print('-' * 20)
+          except Exception as e:
+              print(f'Erro ao ler relatório: {e}')
+          "
